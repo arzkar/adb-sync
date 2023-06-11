@@ -1,0 +1,77 @@
+name: Build and Upload Release Assets
+
+on:
+  create:
+    tags:
+      - "v*" # Trigger the workflow when a new tag starting with 'v' is created
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.ref }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+
+      - name: Build and package binaries
+        run: |
+          # Build binaries for different platforms
+          env GOOS=windows GOARCH=amd64 go build -o adb-sync-win.exe
+          env GOOS=darwin GOARCH=amd64 go build -o adb-sync-macos
+          env GOOS=linux GOARCH=amd64 go build -o adb-sync-linux
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.ref }}
+          release_name: Release ${{ github.event.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        id: upload_assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./adb-sync-win.exe
+          asset_name: adb-sync-win.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload macOs Asset
+        id: upload_macos
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./adb-sync-macos
+          asset_name: adb-sync-macos
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux Asset
+        id: upload_linux
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./adb-sync-linux
+          asset_name: adb-sync-linux
+          asset_content_type: application/octet-stream
