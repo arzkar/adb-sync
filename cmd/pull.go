@@ -63,6 +63,18 @@ func pull(sourcePath string, destinationPath string, dryRun bool, checksum bool,
 		return
 	}
 
+	destinationFiles, err := utils.GetFilesRecursive(destinationPath, "push")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	// Create a map of destination files for faster lookups
+	destinationFileMap := make(map[string]bool)
+	for _, destFile := range destinationFiles {
+		destinationFileMap[destFile] = true
+	}
+
 	for _, file := range sourceFiles {
 		relativePath, err := filepath.Rel(sourcePath, file)
 		if err != nil {
@@ -87,6 +99,21 @@ func pull(sourcePath string, destinationPath string, dryRun bool, checksum bool,
 			utils.SyncFile(sanitizedSourceFile, destFile, "pull", dryRun, checksum, debug)
 		} else {
 			fmt.Printf("Skipped: %s -> %s (File already exists and is up to date)\n\n", color.RedString(sanitizedSourceFile), color.RedString(destFile))
+		}
+
+		// Remove the destination file & its parent from the map if it exists
+		delete(destinationFileMap, destFile)
+		delete(destinationFileMap, filepath.Dir(destFile))
+	}
+
+	// Remove any remaining files in the destination directory that were not in the source
+	for destFile := range destinationFileMap {
+		fmt.Printf("Removing: %s\n", color.YellowString(destFile))
+		if !dryRun {
+			err := os.Remove(destFile)
+			if err != nil {
+				fmt.Printf("Failed to remove file: %v\n", err)
+			}
 		}
 	}
 }
