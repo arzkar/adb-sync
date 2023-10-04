@@ -93,8 +93,7 @@ func push(sourcePath string, destinationPath string, dryRun bool, checksum bool,
 			fmt.Printf("Skipped: %s -> %s (File already exists and is up to date)\n\n", color.RedString(file), color.RedString(sanitizedDestFile))
 		}
 		// Remove the destination file & its parent from the map if it exists
-		delete(destinationFileMap, destFile)
-		delete(destinationFileMap, filepath.Dir(destFile))
+		destinationFileMap = utils.DeleteAllParentDirectories(destinationFileMap, destFile)
 	}
 
 	// Remove any remaining files in the destination directory that were not in the source
@@ -102,7 +101,7 @@ func push(sourcePath string, destinationPath string, dryRun bool, checksum bool,
 		sanitizedDestFile := utils.SanitizeAndroidPath(destFile)
 		fmt.Printf("Removing: %s\n", color.YellowString(sanitizedDestFile))
 		if !dryRun {
-			output, err := exec.Command("adb", "shell", "rm", fmt.Sprintf(`"%s"`, sanitizedDestFile)).CombinedOutput()
+			output, err := exec.Command("adb", "shell", "rm -r", fmt.Sprintf(`"%s"`, sanitizedDestFile)).CombinedOutput()
 			if err != nil {
 				errorMessage := strings.TrimSpace(string(output))
 				fmt.Printf("Failed to remove file: %s\nError: %s\n", color.RedString(sanitizedDestFile), color.RedString(errorMessage))

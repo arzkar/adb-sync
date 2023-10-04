@@ -102,8 +102,7 @@ func pull(sourcePath string, destinationPath string, dryRun bool, checksum bool,
 		}
 
 		// Remove the destination file & its parent from the map if it exists
-		delete(destinationFileMap, destFile)
-		delete(destinationFileMap, filepath.Dir(destFile))
+		destinationFileMap = utils.DeleteAllParentDirectories(destinationFileMap, destFile)
 	}
 
 	// Remove any remaining files in the destination directory that were not in the source

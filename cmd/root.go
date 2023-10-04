@@ -24,7 +24,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "adb-sync",
 	Short: "A CLI to sync between android & local system using adb",
-	Long: `adb-sync v0.1.1
+	Long: `adb-sync v0.1.2
 Copyright (c) Arbaaz Laskar <arzkar.dev@gmail.com>
 
 A CLI to sync between android & local system using adb

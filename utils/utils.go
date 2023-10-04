@@ -283,3 +283,14 @@ func parseAdbLsOutput(output string) []string {
 
 	return filePaths
 }
+
+// Remove the destination file & its parent from the map if it exists
+func DeleteAllParentDirectories(destinationFileMap map[string]bool, path string) map[string]bool {
+	for path != "\\" { // Stop when you reach the root directory
+		delete(destinationFileMap, path)
+		// Move to the parent directory
+		path = filepath.Dir(path)
+	}
+
+	return destinationFileMap
+}
